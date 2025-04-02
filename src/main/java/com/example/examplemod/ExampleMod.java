@@ -1,8 +1,10 @@
 package com.example.examplemod;
 
 import com.example.examplemod.agent.MinecraftAgent;
+import com.example.examplemod.agent.Tools;
 import com.example.examplemod.aivillager.CustomVillager;
 import com.example.examplemod.gui.MyGuiScreen;
+import com.example.examplemod.network.OpenGuiPacket;
 import com.example.examplemod.network.SpawnEntitiesPacket;
 import com.example.examplemod.network.SpawnVillagersPacket;
 import com.mojang.brigadier.CommandDispatcher;
@@ -111,11 +113,11 @@ public class ExampleMod {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse("examplemod:custom_villager"))));
 
 
-    public static List<ToolSpecification> toolSpecifications = ToolSpecifications.toolSpecificationsFrom(MyGuiScreen.class);
+    public static List<ToolSpecification> toolSpecifications = ToolSpecifications.toolSpecificationsFrom(Tools.class);
 
     public static MinecraftAgent agent = AiServices.builder(MinecraftAgent.class)
             .chatLanguageModel(model)
-            .tools(new MyGuiScreen())
+            .tools(new Tools())
             .build();
 
     // Creates a creative tab with the id "examplemod:example_tab" for the example item, that is placed after the combat tab
@@ -139,6 +141,14 @@ public class ExampleMod {
             .clientAcceptedVersions(Channel.VersionTest.exact(1))
             .clientAcceptedVersions(Channel.VersionTest.exact(1))
             .simpleChannel();
+
+    public static final SimpleChannel CHANNEL_GUI = ChannelBuilder.named(ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "gui"))
+            .networkProtocolVersion(PROTOCOL_VERSION)
+            .clientAcceptedVersions(Channel.VersionTest.exact(1))
+            .clientAcceptedVersions(Channel.VersionTest.exact(1))
+            .simpleChannel();
+
+
 
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -198,6 +208,12 @@ public class ExampleMod {
                 .encoder(SpawnEntitiesPacket::encode)
                 .decoder(SpawnEntitiesPacket::decode)
                 .consumerMainThread(SpawnEntitiesPacket::handle)
+                .add();
+
+        CHANNEL_GUI.messageBuilder(OpenGuiPacket.class, id++)
+                .encoder(OpenGuiPacket::encode)
+                .decoder(OpenGuiPacket::decode)
+                .consumerMainThread(OpenGuiPacket::handle)
                 .add();
 
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
