@@ -1,9 +1,11 @@
 package com.example.examplemod;
 
 import com.example.examplemod.agent.MinecraftAgent;
+import com.example.examplemod.aivillager.CustomVillager;
 import com.example.examplemod.gui.MyGuiScreen;
 import com.example.examplemod.network.SpawnEntitiesPacket;
 import com.example.examplemod.network.SpawnVillagersPacket;
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.logging.LogUtils;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.agent.tool.ToolSpecifications;
@@ -12,13 +14,21 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -91,6 +101,16 @@ public class ExampleMod {
             .modelName("gpt-4o")
             .build();
 
+
+    public static final DeferredRegister<EntityType<?>> ENTITIES =
+            DeferredRegister.create(Registries.ENTITY_TYPE, ExampleMod.MODID);
+
+    public static final RegistryObject<EntityType<CustomVillager>> CUSTOM_VILLAGER = ENTITIES.register("custom_villager",
+            () -> EntityType.Builder.of(CustomVillager::new, MobCategory.MISC)
+                    .sized(0.6F, 1.95F) // Dimensioni standard del Villager
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse("examplemod:custom_villager"))));
+
+
     public static List<ToolSpecification> toolSpecifications = ToolSpecifications.toolSpecificationsFrom(MyGuiScreen.class);
 
     public static MinecraftAgent agent = AiServices.builder(MinecraftAgent.class)
@@ -121,6 +141,16 @@ public class ExampleMod {
             .simpleChannel();
 
 
+    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        dispatcher.register(Commands.literal("spawnvillager").executes(context -> {
+            ServerPlayer player = context.getSource().getPlayerOrException();
+            Level world = player.level();
+            CustomVillager villager = new CustomVillager(CUSTOM_VILLAGER.get(), world);
+            villager.setPos(player.getX(), player.getY(), player.getZ());
+            world.addFreshEntity(villager);
+            return 1;
+        }));
+    }
 
     public ExampleMod(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
@@ -133,6 +163,9 @@ public class ExampleMod {
         ITEMS.register(modEventBus);
         // Register the Deferred Register to the mod event bus so tabs get registered
         CREATIVE_MODE_TABS.register(modEventBus);
+
+        ENTITIES.register(modEventBus);
+
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
@@ -183,6 +216,7 @@ public class ExampleMod {
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+        register(event.getServer().getCommands().getDispatcher());
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
