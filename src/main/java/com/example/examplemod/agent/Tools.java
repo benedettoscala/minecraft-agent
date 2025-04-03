@@ -1,6 +1,7 @@
 package com.example.examplemod.agent;
 
 import com.example.examplemod.ExampleMod;
+import com.example.examplemod.aivillager.CustomVillager;
 import com.example.examplemod.network.SpawnEntitiesPacket;
 import com.example.examplemod.network.SpawnVillagersPacket;
 import dev.langchain4j.agent.tool.P;
@@ -11,11 +12,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.unsafe.UnsafeFieldAccess;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Tools {
+
+    private final CustomVillager villager;
+
+    public Tools(CustomVillager villager) {
+        this.villager = villager;
+    }
 
     @Tool("Get all the entity types IDS available in the game. You should use it when you need to know the entity type ID of an entity")
     public String getAllEntityTypeIds() {
@@ -34,6 +42,13 @@ public class Tools {
     public String spawnVillager(@P("Number of Villagers To Spawn") Integer numVillagers) {
         ExampleMod.CHANNEL.send(new SpawnVillagersPacket(numVillagers), PacketDistributor.SERVER.noArg());
         return numVillagers + " villagers have been spawned successfully, no need to spawn others!";
+    }
+
+    @Tool("Let the villager follow the player")
+    public String followPlayer(@P("follow:true the villager follows the player, follow:false the villager stops following the player") Boolean follow) {
+        villager.toggleFollow(follow);
+
+        return "The villager is now following the player!";
     }
 
     @Tool("Spawn the provided number of entities, giving you know the entity type ID")

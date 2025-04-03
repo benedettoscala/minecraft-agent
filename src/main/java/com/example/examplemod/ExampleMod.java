@@ -7,6 +7,7 @@ import com.example.examplemod.gui.MyGuiScreen;
 import com.example.examplemod.network.OpenGuiPacket;
 import com.example.examplemod.network.SpawnEntitiesPacket;
 import com.example.examplemod.network.SpawnVillagersPacket;
+import com.example.examplemod.network.ToggleFollowPacket;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.logging.LogUtils;
 import dev.langchain4j.agent.tool.ToolSpecification;
@@ -115,10 +116,10 @@ public class ExampleMod {
 
     public static List<ToolSpecification> toolSpecifications = ToolSpecifications.toolSpecificationsFrom(Tools.class);
 
-    public static MinecraftAgent agent = AiServices.builder(MinecraftAgent.class)
+    /**public static MinecraftAgent agent = AiServices.builder(MinecraftAgent.class)
             .chatLanguageModel(model)
             .tools(new Tools())
-            .build();
+            .build();**/
 
     // Creates a creative tab with the id "examplemod:example_tab" for the example item, that is placed after the combat tab
     public static final RegistryObject<CreativeModeTab> EXAMPLE_TAB = CREATIVE_MODE_TABS.register("example_tab", () -> CreativeModeTab.builder()
@@ -147,6 +148,13 @@ public class ExampleMod {
             .clientAcceptedVersions(Channel.VersionTest.exact(1))
             .clientAcceptedVersions(Channel.VersionTest.exact(1))
             .simpleChannel();
+
+    public static final SimpleChannel CHANNEL_TOGGLEFOLLOW = ChannelBuilder.named(ResourceLocation.fromNamespaceAndPath(ExampleMod.MODID, "togglefollow"))
+            .networkProtocolVersion(PROTOCOL_VERSION)
+            .clientAcceptedVersions(Channel.VersionTest.exact(1))
+            .clientAcceptedVersions(Channel.VersionTest.exact(1))
+            .simpleChannel();
+
 
 
 
@@ -216,6 +224,12 @@ public class ExampleMod {
                 .consumerMainThread(OpenGuiPacket::handle)
                 .add();
 
+        CHANNEL_TOGGLEFOLLOW.messageBuilder(ToggleFollowPacket.class, id++)
+                .encoder(ToggleFollowPacket::encode)
+                .decoder(ToggleFollowPacket::decode)
+                .consumerMainThread(ToggleFollowPacket::handle)
+                .add();
+
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
 
         Config.items.forEach((item) -> LOGGER.info("ITEM >> {}", item.toString()));
@@ -254,7 +268,7 @@ public class ExampleMod {
     public void onKeyInput(InputEvent.Key event) {
         // Se il tasto definito viene premuto, apri la GUI
         if (openGuiKey.consumeClick()) {
-            Minecraft.getInstance().setScreen(new MyGuiScreen());
+            //Minecraft.getInstance().setScreen(new MyGuiScreen());
         }
     }
 }

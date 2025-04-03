@@ -5,6 +5,7 @@ import com.example.examplemod.agent.DynamicInvoker;
 import com.example.examplemod.agent.MinecraftAIManager;
 import com.example.examplemod.agent.MinecraftAgent;
 import com.example.examplemod.agent.Screenshot;
+import com.example.examplemod.aivillager.CustomVillager;
 import com.example.examplemod.network.SpawnEntitiesPacket;
 import com.example.examplemod.network.SpawnVillagersPacket;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,13 +42,16 @@ import static com.example.examplemod.ExampleMod.toolSpecifications;
 import static dev.langchain4j.internal.Utils.readBytes;
 
 public class MyGuiScreen extends Screen {
+    private final CustomVillager villager;
 
     private EditBox editBox;
 
     private LocalPlayer localPlayer;
 
-    public MyGuiScreen() {
+    public MyGuiScreen(CustomVillager villager)
+    {
         super(Component.literal("My Mod GUI"));
+        this.villager = villager;
     }
 
 
@@ -63,7 +67,7 @@ public class MyGuiScreen extends Screen {
         Button buttonSend = Button.builder(Component.literal("Invia"), (button) -> {
             localPlayer = this.minecraft.player;
             if (localPlayer != null) {
-                MinecraftAIManager aiManager = new MinecraftAIManager(localPlayer);
+                MinecraftAIManager aiManager = new MinecraftAIManager(localPlayer, villager);
                 aiManager.processUserInput(editBox.getValue(), screenShotPath);
                 this.minecraft.setScreen(null);
             }

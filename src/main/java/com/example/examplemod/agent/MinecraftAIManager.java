@@ -2,6 +2,7 @@ package com.example.examplemod.agent;
 
 import com.example.examplemod.ExampleMod;
 import com.example.examplemod.agent.Screenshot;
+import com.example.examplemod.aivillager.CustomVillager;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.data.message.*;
@@ -22,10 +23,13 @@ import static dev.langchain4j.internal.Utils.readBytes;
 
 public class MinecraftAIManager {
     private final LocalPlayer player;
-    private Tools tools = new Tools();
+    private Tools tools;
+    private CustomVillager villager;
 
-    public MinecraftAIManager(LocalPlayer player) {
+    public MinecraftAIManager(LocalPlayer player, CustomVillager villager) {
         this.player = player;
+        this.villager = villager;
+        this.tools = new Tools(villager);
     }
 
     public CompletableFuture<Void> processUserInput(String userInput, String screenShotPath) {
