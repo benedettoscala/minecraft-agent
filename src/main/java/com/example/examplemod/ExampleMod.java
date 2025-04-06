@@ -1,5 +1,6 @@
 package com.example.examplemod;
 
+import com.example.examplemod.agent.MinecraftAIManager;
 import com.example.examplemod.agent.MinecraftAgent;
 import com.example.examplemod.agent.Tools;
 import com.example.examplemod.aivillager.CustomVillager;
@@ -164,6 +165,7 @@ public class ExampleMod {
             ServerPlayer player = context.getSource().getPlayerOrException();
             Level world = player.level();
             CustomVillager villager = new CustomVillager(CUSTOM_VILLAGER.get(), world);
+            villager.setAiManager(new MinecraftAIManager(Minecraft.getInstance().player, villager));
             villager.setPos(player.getX(), player.getY(), player.getZ());
             world.addFreshEntity(villager);
             return 1;

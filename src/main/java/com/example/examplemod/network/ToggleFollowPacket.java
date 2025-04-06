@@ -32,6 +32,7 @@ public class ToggleFollowPacket {
                 if (villager != null) {
                     villager.toggleFollow(msg.follow);
                 }
+
             }
         });
         ctx.setPacketHandled(true);
